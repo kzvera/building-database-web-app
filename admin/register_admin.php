@@ -38,53 +38,66 @@ if (isset($_POST['submit_login'])) {
   //Hash password using our md5 function
   $hashed_pass = hashpassword($c_password);
 
-  // Collect image
-  $c_img = $_FILES['image']['name'];
-  $c_img_tmp = $_FILES['image']['tmp_name'];
+  // Verify File Exention
+  $allowed_ext = array('jpg', 'jpeg', 'png');
+  $filename = $_FILES['image']['name'];
+  $file_ext = pathinfo($filename, PATHINFO_EXTENSION);
 
-  // move image to uploaded images folder
-  move_uploaded_file($c_img_tmp, "uploaded_image/$c_img");
-
-  //Check and see if user already exist in database using email so write query and bind email
-  $db->query("SELECT * FROM admin WHERE email = :email");
-
-  $db->bindvalue(':email', $c_email, PDO::PARAM_STR);
-
-  //Call function to count row
-  $row = $db->fetchSingle();
-
-  if ($row) {
-    //Display error if admin exist 
+  if (!in_array($file_ext, $allowed_ext)) {
     echo '<div class="alert alert-danger text-center">
               <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-              <strong>Sorry!</strong> User already Exist. Register or Try Again
+              <strong>Sorry!</strong> The file you uploaded is not allowed. Please try again.
             </div>';
-  } else {     
-    //Write query to insert values, bind values
-    $db->query("INSERT INTO admin(id, fullname, email, pass, sex, image) VALUES(NULL, :fullname, :email, :password, :sex, :image)");
-
-    $db->bindvalue(':fullname', $c_name, PDO::PARAM_STR);
+  } else {
+    // Collect image
+    $c_img = $_FILES['image']['name'];
+    $c_img_tmp = $_FILES['image']['tmp_name'];
+  
+    // move image to uploaded images folder
+    move_uploaded_file($c_img_tmp, "uploaded_image/$c_img");
+  
+    //Check and see if user already exist in database using email so write query and bind email
+    $db->query("SELECT * FROM admin WHERE email = :email");
+  
     $db->bindvalue(':email', $c_email, PDO::PARAM_STR);
-    $db->bindvalue(':password', $hashed_pass, PDO::PARAM_STR);
-    $db->bindvalue(':sex', $c_sex, PDO::PARAM_STR);
-    $db->bindvalue(':image', $c_img, PDO::PARAM_STR);
-
-    //Execute and assign a varaible to the execution result // remember it returns true of false
-    $run = $db->execute();
-
-    //Comfirm execute and display error or success message
-    if ($run) {
-      echo '<div class="alert alert-success text-center">
-                  <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                  <strong>Success!</strong> Admin registered successfully.  Please Login
-                  </div>';
-    } else {
+  
+    //Call function to count row
+    $row = $db->fetchSingle();
+  
+    if ($row) {
+      //Display error if admin exist 
       echo '<div class="alert alert-danger text-center">
-              <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-              <strong>Sorry!</strong> Admin user could not be registered. Please try again later
-            </div>';
+                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                <strong>Sorry!</strong> User already Exist. Register or Try Again
+              </div>';
+    } else {     
+      //Write query to insert values, bind values
+      $db->query("INSERT INTO admin(id, fullname, email, pass, sex, image) VALUES(NULL, :fullname, :email, :password, :sex, :image)");
+  
+      $db->bindvalue(':fullname', $c_name, PDO::PARAM_STR);
+      $db->bindvalue(':email', $c_email, PDO::PARAM_STR);
+      $db->bindvalue(':password', $hashed_pass, PDO::PARAM_STR);
+      $db->bindvalue(':sex', $c_sex, PDO::PARAM_STR);
+      $db->bindvalue(':image', $c_img, PDO::PARAM_STR);
+  
+      //Execute and assign a varaible to the execution result // remember it returns true of false
+      $run = $db->execute();
+  
+      //Comfirm execute and display error or success message
+      if ($run) {
+        echo '<div class="alert alert-success text-center">
+                    <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                    <strong>Success!</strong> Admin registered successfully.  Please Login
+                    </div>';
+      } else {
+        echo '<div class="alert alert-danger text-center">
+                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                <strong>Sorry!</strong> Admin user could not be registered. Please try again later
+              </div>';
+      }
     }
   }
+
 
 }
 
